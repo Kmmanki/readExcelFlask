@@ -1,0 +1,264 @@
+{% extends 'work_layout.html' %}
+{% block btn_div%}
+<style>
+    input[type=checkbox] {
+        transform: scale(3);
+        margin-left:1.8rem;
+        margin-right:1.8rem;
+        
+    }
+    
+    .check_div p {
+        display:inline-block
+    }
+
+
+
+
+</style>
+
+    <br>
+	<div class='check_div'>
+ 
+        <input type='checkbox' onchange='checkbox_onchange(event)' name='result' value='진성여부'><p>진성여부</p>
+        <input type='checkbox' onchange='checkbox_onchange(event)' name='result' value='L1'><p>L1</p>
+        <input type='checkbox' onchange='checkbox_onchange(event)' name='result' value='L3'><p>L3</p>
+        <input type='checkbox' onchange='checkbox_onchange(event)' name='result' value='L6'><p>L6</p>
+        <input type='checkbox' onchange='checkbox_onchange(event)' name='result' value='L7'><p>L7</p>
+        <br>
+        <input style='display:none' type='text' id='garbage_result' placeholder='가비지키워드'> 
+        <input type='text' id='comment_result' placeholder='비고'>
+
+        <input id='btn_prev_tag' disabled=true type='submit' value='이전' onclick='prev()'>
+		<input id='btn_tag' type='submit' value='다음' onclick='next()'>
+		
+        <br>
+		<input id='btn_tag' type='submit' onclick='save1()' value='다운로드'>
+        <br>
+        <input type='number' placeholder='이동할 row 번호'>
+        <button onclick = 'move()'>이동</button>
+    </div>
+
+<div>
+    <form  action='/save' method='POST' target='_blank'>
+        <input style='display:none;' style= type = 'text' name='file_name'>
+        <input style='display:none;' type = 'text' name='results_tag'>
+        <input style='display:none;' type = 'submit'>
+    </form>
+</div>
+
+    <script>
+        {% autoescape off %}
+            data = {{data|safe}}
+            file_name = {{file_name|safe}}
+        {% endautoescape %}
+
+
+        //다음버튼 함수
+        function next(){
+            //excel의 첫 화면의 count = -1 상태 next를 누르면 0으로 데이터의 0번 인덱스 부터 사용
+            
+            count = 1*title_tag.dataset.num+1
+            
+            //카운트가 총 데이터의 크기와 같거나 크다면 마지막
+                if(data.length <= count){
+                    if (value_check(data.length <= count)){
+                        return 
+                    }
+                    
+                    alert('끝')
+                    row_save(data.length <= count)
+
+                    btn_tag.disabled=true
+                    return
+                }else if(count != 0 ){
+                    //-1 에서 0으로 넘어가는 때는 데이터가 없기 때문에 checkbox 검사를 하지 않음.
+                    if (value_check()){
+                        return 
+                    }
+                    check_checkbox(count)
+                    
+                }
+                
+                // 데이터를 사용하여 화면 갱신
+                show(count, data)
+                //0번 index를 사용하는 중이 아니라면 이전 버튼은 활성화
+                if(count !=0){
+                    btn_prev_tag.disabled=false
+                }
+                check_checkbox(count)
+                setTimeout( function(){ 
+                    document.querySelector("body > div > div.check_div > input[type=checkbox]:nth-child(1)").focus();
+                }, 100 );
+                row_save()
+            }
+
+        //다음버튼 
+        function next_without_value_check(num){
+                //move에서 받아온 coundt는 excel을 기준의 row를 받은 것
+                //excel의 1번은 해더, 2번부터 데이터의 시작
+                //excel의 2번은 data의 0번째 인덱스와 같다 
+                //사용자가 엑셀의 3번을 보고 싶다면 data의 1번 인덱스를 가져와야한다               
+                count = 1*num-2
+
+                if(data.length <= count){
+
+                    alert('끝')
+                    btn_tag.disabled=true
+                    return
+                }else if(count != 0 ){
+                }
+                show(count, data)
+                if(count !=0){
+                    btn_prev_tag.disabled=false
+                }
+            //데이터에서 체크 여부 가져오기
+            check_checkbox(count)
+           // 가끔 크롬에서 포커스가 동작 하지 않는 버그가 있음. settimeout 사용하면 된다함
+            setTimeout( function(){ 
+                document.querySelector("body > div > div.check_div > input[type=checkbox]:nth-child(1)").focus();
+            }, 100 );
+        }
+
+        //json 에다가 저장하는 거 
+        function value_check(is_last){
+            return_value = {}
+            comm_tag=document.getElementById("comment_result")
+            garbage_tag=document.getElementById("garbage_result")
+            for (var i=0; i<5; i++) {
+                checkbox_tag = document.getElementsByName("result")[i]
+               
+                if (checkbox_tag.checked == true) {
+                  data[count-1][checkbox_tag.value] = "Y"
+
+                }else{
+                   data[count-1][checkbox_tag.value] = "N"
+                   
+                }
+                if(!is_last)
+                    checkbox_tag.checked = false
+
+            }
+
+            if (data[count-1]['진성여부']=='N') {
+                data[count-1]['진성여부_comment'] = comm_tag.value
+            } else if ((data[count-1]['진성여부']=='Y' && data[count-1]['L1']=='N')) {
+                data[count-1]['L1_comment'] = comm_tag.value
+            } else if ((data[count-1]['진성여부']=='Y' && data[count-1]['L1']=='Y' && data[count-1]['L3']=='N')) {
+                data[count-1]['L3_comment'] = comm_tag.value
+            } else if ((data[count-1]['진성여부']=='Y' && data[count-1]['L1']=='Y' && data[count-1]['L3']=='Y' && data[count-1]['L6']=='N')) {
+                data[count-1]['L6_comment'] = comm_tag.value
+            } else if ((data[count-1]['진성여부']=='Y' && data[count-1]['L1']=='Y' && data[count-1]['L3']=='Y' && data[count-1]['L6']=='Y' && data[count-1]['L7']=='N')) {
+                data[count-1]['L7_comment'] = comm_tag.value
+            } else if ((data[count-1]['진성여부']=='Y' && data[count-1]['L1']=='Y' && data[count-1]['L3']=='Y' && data[count-1]['L6']=='Y' && data[count-1]['L7']=='Y')) {
+                data[count-1]['비고'] = comm_tag.value
+            }
+            data[count-1]['가비지키워드']=garbage_tag.value
+
+            garbage_tag.value=''
+            comm_tag.value=''
+            
+
+        }
+
+		function save1(){
+			
+            file_name_tag = document.querySelector('input[name=file_name]')
+            results_text_tag = document.querySelector('input[name=results_tag]')
+            btn = document.querySelectorAll("input[type=submit]")[3]
+            file_name_tag.value = file_name
+            tmp_result = []
+
+    
+            //모든 데이터를 json으로 보낼 시 python에서 read_json에서 특수문자 때문에 에러 발생
+            //data에서 진성여부, 등등 데이터를 추출하여 사용자가 입력한 결과만 python으로 보낸다.
+            tmp_list = []
+            for(i = 0 ; i < data.length; i++){
+                tmp_json ={}
+                
+                tmp_json['진성여부'] = data[i]['진성여부']
+                tmp_json['진성여부_comment'] = data[i]['진성여부_comment']
+                tmp_json['L1'] = data[i]['L1']
+                tmp_json['L1_comment'] = data[i]['L1_comment']
+                tmp_json['L3'] = data[i]['L3']
+                tmp_json['L3_comment'] = data[i]['L3_comment']
+                tmp_json['L6'] = data[i]['L6']
+                tmp_json['L6_comment'] = data[i]['L6_comment']
+                tmp_json['L7'] = data[i]['L7']
+                tmp_json['L7_comment'] = data[i]['L7_comment']
+                tmp_json['가비지키워드'] = data[i]['가비지키워드']
+                tmp_json['비고'] = data[i]['비고']
+                tmp_list.push(tmp_json)
+            }
+
+
+            results_text_tag.value = JSON.stringify(tmp_list)
+
+            btn.click()
+
+
+		}
+
+
+        function move(){
+            row_num =  document.querySelector("input[type=number]")
+
+            count = (1*row_num.value)
+            if(count.value < -1 ||row_num.value == '' || data.length+1 < count){
+                alert('유효하지 않은 수 입니다.')
+                return
+            }
+            next_without_value_check(count)
+
+
+            row_num.value= ''
+            
+            
+        }
+
+
+        function row_save(is_last){
+            count = 1*title_tag.dataset.num-1
+            if(is_last)
+                count +=1
+            if(count < 0){
+                return
+            }
+            json_data ={}    
+            json_data['진성여부'] = data[count]['진성여부']
+            json_data['진성여부_comment'] = data[count]['진성여부_comment']
+            json_data['L1'] = data[count]['L1']
+            json_data['L1_comment'] = data[count]['L1_comment']
+            json_data['L3'] = data[count]['L3']
+            json_data['L3_comment'] = data[count]['L3_comment']
+            json_data['L6'] = data[count]['L6']
+            json_data['L6_comment'] = data[count]['L6_comment']
+            json_data['L7'] = data[count]['L7']
+            json_data['L7_comment'] = data[count]['L7_comment']
+            json_data['가비지키워드'] = data[count]['가비지키워드']
+            json_data['비고'] = data[count]['비고']
+            json_data = JSON.stringify(json_data)
+            console.log(json_data)
+            
+            $.ajax({
+                url:'/row_save', // 요청 할 주소
+                async:false,// false 일 경우 동기 요청으로 변경
+                type:'POST', // GET, PUT
+                data: {
+                    "file_name": file_name,
+                    "count" : count,
+                    "json_data" : json_data
+                    
+                },// 전송할 데이터
+                dataType:'json',// xml, json, script, html
+                success:function(result,jqXHR) {
+                    console.log(result['msg'])
+                },// 요청 완료 시
+                error:function(e, jqXHR) {
+                    console.log(e)
+                },// 요청 실패.
+            });
+        }
+    </script>
+
+{% endblock %}
