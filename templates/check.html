@@ -1,0 +1,48 @@
+{% extends 'work_layout.html' %}
+
+{% block btn_div%}
+    <br>
+	<div class='fix_div'>
+        <input id='btn_prev_tag' disabled=true type='submit' value='이전' onclick='prev()'>
+		<input id='btn_tag' type='submit'  value='다음' onclick='next()'>
+		<input type='number' placeholder='이동할 row 번호'>
+        <button onclick = 'move()'>이동</button>
+	</div>
+    <br>
+
+    <script>
+        function next(num){
+                if(num != undefined)
+                    count = 1*num-2
+                else
+                    count = 1*title_tag.dataset.num+1
+
+                if(data.length <= count){
+
+                    alert('끝')
+                    btn_tag.disabled=true
+                    return
+                }
+                show(count,data)
+
+                if(count !=0){
+                    btn_prev_tag.disabled=false             
+                }
+                btn_tag.focus()
+            }
+
+        function move(){
+            row_num =  document.querySelector("input[type=number]")
+            count = (1*row_num.value)+1
+            if(count.value < -1 ||row_num.value == '' || data.length < count){
+                alert('유효하지 않은 수 입니다.')
+                return
+            }
+            next(count-1)
+            row_num.value= ''
+            
+        }
+
+
+    </script>
+{% endblock %}
