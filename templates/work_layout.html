@@ -1,0 +1,84 @@
+<html>
+<head>
+    <meta http-equiv="Cache-Control" content="no-cache">
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+    <title_tag>work page</title_tag>
+    <style>
+        #text_tag{
+            font-size: 20px;
+            line-height: 2.3;
+        }
+
+        table {
+            width: 100%;
+            border: 1px solid #444444;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #444444;
+        }
+
+        input[type=submit] {
+            transform: scale(1.5);
+            margin-left:1.2rem;
+            margin-right:1.2rem;
+            margin-top: 1.0rem;
+        
+        }
+
+        button {
+            transform: scale(1.5);
+            margin-left:1.2rem;
+            margin-right:1.2rem;
+            margin-top: 1.0rem;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class='fix_div'>
+        <table style='width:100%; text-align: center;'>
+            <tr>
+                <th>크롤아이디</th>
+                <th>매치워드</th>
+                <th>제품</th>
+                <th>속성중분류</th>
+                <th>속성소분류</th>
+                <th>감성</th>
+                <th>링크</th>
+               
+            </tr>
+            <tr>
+                <td><p id='carawl_id_tag'></p></td>
+                <td><p id='keyword_tag'></p></td>
+                <td><p id='product_tag'></p></td>
+                <td><p id='att_midle_tag'></p></td>
+                <td><p id='att_low_tag'></p></td>
+                <td><p id='sensitive_tag'></p></td>
+                <td><a id='link_tag' href = '' target='blink'>url</a></td>
+            </tr>
+        <table>
+
+    </div>
+    {% block btn_div%}{% endblock %}
+    <br>
+    <h3 id="index_tag"></h3>
+
+    <h4>제목</h4>
+    <p data-num=-1 id='title_tag'><strong>야호</strong></p>
+
+    <h4>원문</h4>
+    <p id='text_tag'><p>
+
+    <script>
+        {% autoescape off %}
+            data = {{data|safe}}
+        {% endautoescape %}
+    </script>
+    <script src="{{ url_for('static', filename='work_common.js')}}"></script>
+    
+
+
+</body>
+</html>
