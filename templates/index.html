@@ -1,0 +1,180 @@
+<html>
+<head>
+    <title>index page</title>
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+</head>
+<body>
+    <h1>indexPage</h1>
+    <h2>사용자 추가</h2>
+    <form name="createUser" action="" method="POST">
+        <input type="text" name='userName' placeholder="사용자입력" maxlength="4" onchange='change_not_duplicated_checkbox()'>
+        <input type="submit" value="사용자 추가" onclick='make_user()' >
+    </form>
+
+    <hr>
+
+    <h2>파일 업로드</h2>
+    <form name='file_form' action = '/check' method ="POST" enctype='multipart/form-data'>
+        <input type = 'file' name='file'/>
+        <input style='display: none' name='sheet_number' type=number>
+        <input type='text' name='user_name' style='display: none'>
+        <input  type='submit' style='display: none' />
+    </form>
+
+    <select >
+        <option selected value="check">확인</option>
+        <!--<option value="validation">검증작업_숫자</option>  -->
+        <option value="validation_checkbox">검증작업_체크박스</option>
+        <option value="code">최신 시소러스_분류 코드 검색하기</option>
+        <option value="predict">가비지파인더 (시범운영)</option> 
+        
+    </select>
+    <select >
+        <option selected value=0>sheet1번</option>
+        <option value=1 >sheet2번</option>
+        <option value=2 >sheet3번</option>
+        <option value=3 >sheet4번</option>
+        <option value=4 >sheet5번</option>
+    </select>
+    <select name='userName' id="users">
+        {% for user in users %}
+        <option value={{user}} > {{user}} </option>
+        {% endfor %}
+    </select>
+
+    <input id='btn' onclick='submit()' value='열기' type='submit'/>
+
+    <hr>
+    <h2>검증작업 불러오기</h2>
+    <form action="/load_validation" method="POST">
+        <select name='load_user_name_slelct' onchange='search_files()'>
+            {% for user in users %}
+            <option value={{user}} > {{user}} </option>
+            {% endfor %}
+        </select>
+        <select name="file_names">
+            {% for file in user_files %}
+            <option value={{file}} > {{file}} </option>
+            {% endfor %}
+            
+        </select>
+        <input type='submit' value="불러오기">
+    </from>
+    <h2>필독!</h2>
+     <h3>
+        확인 및 정확도 검증을 사용하기 위한 엑셀 양식은 다음과 같습니다. <br>
+        각 컬럼명을 일치시켜주시기 바랍니다.
+    </h3>
+    <a href='/form_download'/ target="_blank">엑셀 양식 다운로드 </a>
+    <br>
+    <img src='static/imags/check_form.PNG'>
+    <br>
+    <br>
+    <h1>사용법</h1>
+    <h2>반드시 열고자 하는 엑셀 파일의 시트 번호를 확인하세요!!!</h2>
+     <h3> 1. 확인</h3>
+    <h4>새로운 작업 없이 단순히 엑셀시트를 확인하려고 할 때 사용합니다.</h4>
+    <br>
+    <img src='static/imags/check.PNG'>
+    <br>
+    <h3> 2. 검증작업_체크박스</h3>
+    <h4>정확도 검증 작업을 입력하고 저장하기 위해 활용할 수 있습니다 <br>
+    체크박스에 체크하시면 Y로 저장되고 하지 않을 시 N으로 저장됩니다.<br>
+    비고란에 코멘트를 입력하시면 N이 시작되는 부분에 저장되며 전체 Y를 체크 한 후에 코멘트를 입력하시면 비고란에 저장됩니다.<br>
+    다운로드를 누르시면 이전까지의 작업이 해당 파일에 덧붙여져 파일로 생성됩니다.</h4>
+    <br>
+    <img src='static/imags/input.PNG'>
+    <br>
+    <h3> 3. 최신 시소러스_분류코드 검색</h3>
+    <h4>최신 시소러스가 입력된 시트를 열어 검색하고자 할 때 활용합니다.<br>
+    Before 검색어 없이 카테고리만 선택하면 해당 카테고리의 전체 데이터가 출력됩니다.</h4>
+    <br>
+    <img src='static/imags/search.PNG'>
+    
+
+    
+       
+    </details>
+    <script>
+        
+        function submit(){
+            form_submit = document.querySelector("form[name=file_form] input[type=submit]")
+            file_tag = document.querySelector("form[name=file_form] input[type=file]")
+            from_tag = document.querySelector("form[name=file_form]")
+            work_page_tag = document.querySelectorAll("select")[0]
+            sheet_page_select_tag = document.querySelectorAll("select")[1]
+            sheet_page_input_tag = document.querySelector("form[name=file_form] input[name=sheet_number]")
+            user_name_select_tag = document.querySelectorAll("select")[2]
+            user_name_input_tag = document.querySelector("form[name=file_form] input[name=user_name]")
+
+            if(file_tag.value == ''){
+                alert('파일을 선택해주세요.')
+                return
+            }
+
+            sheet_page_input_tag.value = 1*sheet_page_select_tag.value
+            user_name_input_tag.value = user_name_select_tag.value
+            from_tag.action = '/'+work_page_tag.value
+            form_submit.click()
+        }
+
+     
+
+        function make_user(){
+            var userName = document.querySelector("form[name=createUser] input[name=userName]").value
+            $.ajax({
+                url:'/makeUser', // 요청 할 주소
+                async:false,// false 일 경우 동기 요청으로 변경
+                type:'POST', // GET, PUT
+                data: {
+                    userName: userName
+                    
+                },// 전송할 데이터
+                dataType:'json',// xml, json, script, html
+                success:function(result,jqXHR) {
+                    console.log(result['msg'])
+                    if(result['msg'] == 'is created'){
+                        
+                        alert('생성되었습니다.')
+                        // location.href="http://127.0.0.1:5000"
+                    }else{
+                        alert("이미 존재하는 사용자 입니다.")
+                    }
+                    
+                },// 요청 완료 시
+                error:function(e, jqXHR) {
+                    console.log(e)
+                },// 요청 실패.
+            });
+        }
+
+
+        function search_files(){
+            console.log("hello")
+            user_name_select_tag = document.querySelectorAll("select")[3]
+            file_name_select_tag = document.querySelectorAll("select")[4]
+            $.ajax({
+                url:'/search_files', // 요청 할 주소
+                async:false,// false 일 경우 동기 요청으로 변경
+                type:'POST', // GET, PUT
+                data: {  
+                    "user_name" :       user_name_select_tag.value            
+                },// 전송할 데이터
+                dataType:'json',// xml, json, script, html
+                success:function(result,jqXHR) {
+                    console.log(result)
+                    file_name_innerHTML_str = ''
+                    for(i = 0 ; i < result.files.length; i ++){
+                        file_name_innerHTML_str += "<option value="+result.files[i]+">"+result.files[i]+"</option>"
+                    }
+                    file_name_select_tag.innerHTML= file_name_innerHTML_str
+                   
+                },// 요청 완료 시
+                error:function(e, jqXHR) {
+                    console.log(e)
+                },// 요청 실패.
+            });
+        }
+    </script>
+</body>
+</html>
