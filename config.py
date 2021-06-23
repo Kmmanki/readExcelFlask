@@ -8,21 +8,27 @@ class Dev_config:
     debug=True
     host='localhost'
     remove_day = 1
+    '''
+    no Tensor
     from eunjeon import Mecab
     mecab = Mecab
+    '''
     port = 5000
 
 
 class Live_config:
     env_name="LIVE"
-    FILE_DIR='/home/sysadm01/analysis-work/userFile/'
-    excel_form_dir = "/home/sysadm01/analysis-work/excel_form/"
+    FILE_DIR='/mnt/disks/app001/userFile/'
+    excel_form_dir = "/mnt/disks/app001/excel_form"
 
     debug=False
-    host='10.146.0.7'
+    host='?'
     remove_day = 31
+    '''
+    no Tensor
     from konlpy.tag import Mecab
     mecab = Mecab
+    '''
     port = 5000
 
 class Live_Test_config:
@@ -31,10 +37,13 @@ class Live_Test_config:
     excel_form_dir = "/home/sysadm01/analysis-work/excel_form/"
 
     debug=False
-    host='10.146.0.7'
+    host='?'
     remove_day = 31
+    '''
+    no Tensor
     from konlpy.tag import Mecab
     mecab = Mecab
+    '''
     port = 5001
 
 #실행 시 첫 번째 파라미터가 LIVE 라면 / 라이브클래스 / 아니라면 DEV 클래스
