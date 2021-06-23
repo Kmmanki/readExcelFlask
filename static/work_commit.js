@@ -2,7 +2,7 @@
 colors = ['#F3F799', '#F7819F', '#F7BE81', '#81F781', '#D6DBDF', '#AED6F1', '#D7BDE2']
 
 carawl_id_tag =  document.querySelector("#carawl_id_tag")
-
+company_tag = document.querySelector("#company_tag")
 index_tag = document.querySelector("#index_tag")
 title_tag = document.querySelector("#title_tag")
 text_tag = document.querySelector("#text_tag")
@@ -12,6 +12,8 @@ btn_tag = document.querySelector("#btn_tag")
 btn_prev_tag = document.querySelector("#btn_prev_tag")
 
 product_tag = document.querySelector("#product_tag")
+att_heigh_tag = document.querySelector("#att_heigh_tag")
+
 att_midle_tag = document.querySelector("#att_midle_tag")
 att_low_tag = document.querySelector("#att_low_tag")
 link_tag = document.querySelector("#link_tag")
@@ -31,7 +33,7 @@ function prev(){
         btn_prev_tag.disabled=true
     }
     now_url = window.location.href
-    if(now_url.includes('validation_checkbox')){
+    if(now_url.includes('validation') ){
         check_checkbox(count)
     }
 
@@ -40,43 +42,54 @@ function prev(){
 function check_checkbox(count){
     comm_tag=document.getElementById("comment_result")
     garbage_tag=document.getElementById("garbage_result")
-    for (var i=0; i<5; i++) {
+    for (var i=0; i<5; i++) {   
         checkbox_tag = document.getElementsByName("result")[i]
         if ( data[count][checkbox_tag.value] == "Y") {
             checkbox_tag.checked = true
+            
 
         }else{
             checkbox_tag.checked = false
-            if (data[count]['진성여부']=='N') {
-                comm_tag.value=data[count]['진성여부_comment'] 
-            } else if ((data[count]['진성여부']=='Y' && data[count]['L1']=='N')) {
-                comm_tag.value=data[count]['L1_comment'] 
-            } else if ((data[count]['진성여부']=='Y' && data[count]['L1']=='Y' && data[count]['L3']=='N')) {
-                comm_tag.value=data[count]['L3_comment'] 
-            } else if ((data[count]['진성여부']=='Y' && data[count]['L1']=='Y' && data[count]['L3']=='Y' && data[count]['L6']=='N')) {
-                comm_tag.value=data[count]['L6_comment'] 
-            } else if ((data[count]['진성여부']=='Y' && data[count]['L1']=='Y' && data[count]['L3']=='Y' && data[count]['L6']=='Y' && data[count]['L7']=='N')) {
-                comm_tag.value=data[count]['L7_comment'] 
-            } else if ((data[count]['진성여부']=='Y' && data[count]['L1']=='Y' && data[count]['L3']=='Y' && data[count]['L6']=='Y' && data[count]['L7']=='Y')) {
-                comm_tag.value=data[count]['비고'] 
-            }
+            
         }
-        
-    }
 
-    garbage_tag.value=data[count]['가비지키워드']
-    
+
+
+    }
+    if (data[count]['진성여부']=='N') {
+        comm_tag.value=data[count]['진성여부_comment'] 
+    } else if ((data[count]['진성여부']=='Y' && data[count]['L1']=='N')) {
+        comm_tag.value=data[count]['L1_comment'] 
+
+    } else if ((data[count]['진성여부']=='Y' && data[count]['L1']=='Y' && data[count]['L3']=='N')) {
+        comm_tag.value=data[count]['L3_comment'] 
+
+    } else if ((data[count]['진성여부']=='Y' && data[count]['L1']=='Y' && data[count]['L3']=='Y' && data[count]['L6']=='N')) {
+        comm_tag.value=data[count]['L6_comment'] 
+
+    } else if ((data[count]['진성여부']=='Y' && data[count]['L1']=='Y' && data[count]['L3']=='Y' && data[count]['L6']=='Y' && data[count]['L7']=='N')) {
+        comm_tag.value=data[count]['L7_comment'] 
+
+    } else if ((data[count]['진성여부']=='Y' && data[count]['L1']=='Y' && data[count]['L3']=='Y' && data[count]['L6']=='Y' && data[count]['L7']=='Y')) {
+        comm_tag.value=data[count]['비고'] 
+        
+}
+
+    // garbage_tag.value=data[count]['가비지키워드']
+    // garbage_tag.value=''
+    // comm_tag.value=''
 }
 
 $(document).keydown(function(event) {  
-    focusEle = document.activeElement;     
+    focusEle = document.activeElement;
+    //alert(event.keyCode)     
     if (document.getElementById('comment_result') == focusEle) {         
     }    
     else {                
-        if (event.keyCode == '37') {
+        if (event.keyCode == '37' || event.keyCode == '66') {
             prev()
         }
-        else if (event.keyCode == '39') {
+        else if (event.keyCode == '39' || event.keyCode == '78') {
             next()
             // $("input:checkbox[value='진성여부']").prop("checked", true);
             // $("input:checkbox[value='L1']").prop("checked", true);
@@ -133,7 +146,7 @@ $(document).keydown(function(event) {
 
             }
         }
-        else if (event.keyCode == '32') {
+        else if (event.keyCode == '32' || event.keyCode == '84') {
             $(':focus').blur();
             event.preventDefault();
             if ($("input:checkbox[value='L7']").is(":checked") == true){
@@ -148,6 +161,46 @@ $(document).keydown(function(event) {
                 $("input:checkbox[value='L7']").prop("checked", true)
             }
         }
+        else if (event.keyCode == '70') {
+            $(':focus').blur();
+            event.preventDefault();
+            
+            //포커스 comment_result
+            document.querySelector("#comment_result").focus();
+        }
+        else if (event.ctrlKey && event.altKey && event.keyCode == '83') {
+            $(':focus').blur();
+            event.preventDefault();
+            //저장
+            save_server();
+        }
+        else if (event.ctrlKey && event.altKey && event.keyCode == '68') {
+            $(':focus').blur();
+            event.preventDefault();
+            //다운
+            save1();
+        }
+        else if (event.keyCode == '85') {
+            $(':focus').blur();
+            event.preventDefault();
+            
+            //스크롤 업 
+            document.body.scrollTop = document.body.scrollTop - 100;
+        }
+        else if (event.keyCode == '68') {
+            $(':focus').blur();
+            event.preventDefault();
+            
+            //스크롤 다운 
+            document.body.scrollTop = document.body.scrollTop+ 100;
+        }
+        else if (event.keyCode == '77') {
+            $(':focus').blur();
+            event.preventDefault();
+            
+            //번호 포커스
+            document.querySelector("body > div > div.check_div > input[type=number]:nth-child(19)").focus()
+        }
     }           
 })
 
@@ -160,8 +213,8 @@ function show(count, data){
     else
         index_num=show_count+"행 " + "( "+data[count]['키워드']+" )"
 
-    title = data[count]['제목'] 
-    text = data[count]['원문']
+    title = String(data[count]['제목']) 
+    text = String(data[count]['원문'])
     keyword = data[count]['매치워드']
 
     
@@ -180,7 +233,10 @@ function show(count, data){
                 }
             }
         }
-
+        
+        if (key.length<=1 && ( (key>='A' && key<='Z') || (key>='a' && key<='z') || key=='' )) {
+            key='NULL'
+        }
 
         //하이라으트의 색상을 다르게 하기위해 색상 정보를 담은 colors 리스트를 사용
         if(i >= colors.length )
@@ -190,7 +246,7 @@ function show(count, data){
 
         //key와 replace를 할 배경색이 있는 key 생성
         mark_tag = "<mark style ='background-color: "+color+"'>"+key+"</mark>"
-
+        
         title = title.replaceAll(key, mark_tag)
         text = text.replaceAll(key, mark_tag)
         keyword = keyword.replaceAll(key, mark_tag)
@@ -199,11 +255,12 @@ function show(count, data){
     }
 
     product_tag.innerHTML = data[count]['제품']
+    att_heigh_tag.innerHTML = data[count]['속성대분류']
     att_midle_tag.innerHTML = data[count]['속성중분류']
     att_low_tag.innerHTML = data[count]['속성소분류']
     sensitive_tag.innerHTML = data[count]['감성']
     carawl_id_tag.innerHTML = data[count]['크롤아이디']
-
+    company_tag.innerHTML = data[count]['회사']
     link_tag.href = data[count]['url']
     
     index_tag.innerHTML = index_num
