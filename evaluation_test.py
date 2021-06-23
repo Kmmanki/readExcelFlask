@@ -5,14 +5,16 @@ import os
 import time
 import uuid
 import pickle
-from tensorflow.keras.models import load_model
-# from eunjeon import Mecab
+import numpy as np
+# from tensorflow.keras.models import load_model
+#from eunjeon import Mecab
 from io import BytesIO, StringIO
 from apscheduler.schedulers.background import BackgroundScheduler
+from io import StringIO
 
 import garbege_test
-from tensorflow.keras.preprocessing.sequence import pad_sequences
-
+import ml_garbage_test
+# from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 #로컬, 라이브에 따라 변동하는 설정파일
 from config import CONFIG
@@ -22,16 +24,17 @@ app.config['JSON_AS_ASCII'] = False
 
 
 
-#크론(스케줄러) 시작
+# 크론(스케줄러) 시작
 sched = BackgroundScheduler(daemon=True)
 from utils.schedule_func import del_excel_files
 
-#개발 환경이라면 각분의 1초 마다 실행하는 스케쥴 / 라이브환경이라면 매일 01시에 동작하는 스케쥴
-#ps 플라스크가 디버그모드로 실행된다면 스캐줄러가 두번 실행됨 참고
+# 개발 환경이라면 각분의 1초 마다 실행하는 스케쥴 / 라이브환경이라면 매일 01시에 동작하는 스케쥴
+# ps 플라스크가 디버그모드로 실행된다면 스캐줄러가 두번 실행됨 참고
 if CONFIG.env_name =='DEV':
     sched.add_job(del_excel_files,'cron',minute=1)
 elif CONFIG.env_name =="LIVE":
-    sched.add_job(del_excel_files,'cron',hour=1)
+    print()
+    # sched.add_job(del_excel_files,'cron',hour=1)
 
 sched.start()
 
@@ -72,8 +75,12 @@ def validation_checkbox_page():
     excel_file_request = request.files['file']
     sheet_number = int(request.form['sheet_number'])
     user_name = request.form['user_name']+"/"
-
-    file_name = CONFIG.FILE_DIR+user_name +excel_file_request.filename 
+    file_name = None
+    try:
+        file_name = CONFIG.FILE_DIR+user_name +excel_file_request.filename 
+    except FileNotFoundError:
+        os.mkdir(CONFIG.FILE_DIR)
+        file_name = CONFIG.FILE_DIR+user_name +excel_file_request.filename
     if os.path.isfile(file_name):
         return "<h1>이미 존재하는 파일입니다.</h1>"
     excel_df = pd.read_excel(excel_file_request, sheet_name=sheet_number)
@@ -89,7 +96,7 @@ def validation_checkbox_page():
         excel_df['L6'] = '-'
         excel_df['L6_comment'] = ''
         excel_df['L7'] = '-'
-        excel_df['L7_comment'] = '-'
+        excel_df['L7_comment'] = ''
         # excel_df['가비지키워드']=''
         excel_df['비고'] =''
 
@@ -107,8 +114,11 @@ def check_page():
     excel_file_request = request.files['file']
     sheet_number = int(request.form['sheet_number'])
     excel_df = pd.read_excel(excel_file_request, sheet_name=sheet_number)
+    '''
+    no Tensor
     keywords= garbege_test.garbage_predict(excel_df)
     excel_df["키워드"]=keywords
+    '''
     json_data = excel_df.to_json(orient='records', double_precision=15, force_ascii=False)
     
     return render_template('check.html', data=json_data)
@@ -154,10 +164,8 @@ def result_page():
 # 다운로드 url
 @app.route('/save', methods=['POST'])
 def save():
-    time_format = time.strftime('%m_%d_%H_%M_%S')
-
     origin = pd.read_excel(request.form['file_name'])
-    results = pd.read_json(request.form['results_tag'])
+    results = pd.read_json(StringIO(request.form['results_tag']))
     # print(request.form['results_tag'])
     origin['진성여부'] = results['진성여부']
     origin['진성여부_comment'] = results['진성여부_comment']
@@ -190,30 +198,30 @@ def save():
     #finally return the file
     return send_file(output, attachment_filename="testing.xlsx", as_attachment=True)
 
-#test_tamplate에서 테스트에 사용하는 save_test
-@app.route('/save_test', methods=['POST'])
-def save_test():
-    excel_file_request = request.files['file']
+#server파일에 세이브
+@app.route('/save_server', methods=['POST'])
+def save_server():
+    file_name = request.form['file_name']
+    origin = pd.read_excel(file_name)
     
-    excel_file = pd.read_json(excel_file_request)
-
-    output = BytesIO()
-    writer = pd.ExcelWriter(output, engine='xlsxwriter')
-    excel_file.to_xml
-    #taken from the original question
-    excel_file.to_excel(writer, startrow = 0, merge_cells = False, sheet_name = "Sheet_1", index=False)
-    workbook = writer.book
-    worksheet = writer.sheets["Sheet_1"]
-
-
-    #the writer has done its job
-    writer.close()
-
-    #go back to the beginning of the stream
-    output.seek(0)
-
-    #finally return the file
-    return send_file(output, attachment_filename="dir.xlsx", as_attachment=True)
+    results = pd.read_json(StringIO(request.form['json_data']))
+    # print(request.form['results_tag'])
+    origin['진성여부'] = results['진성여부']
+    origin['진성여부_comment'] = results['진성여부_comment']
+    origin['L1'] = results['L1']
+    origin['L1_comment'] = results['L1_comment']
+    origin['L3'] = results['L3']
+    origin['L3_comment'] = results['L3_comment']
+    origin['L6'] = results['L6']
+    origin['L6_comment'] = results['L6_comment']
+    origin['L7'] = results['L7']
+    origin['L7_comment'] = results['L7_comment']
+    # origin['가비지키워드'] = results['가비지키워드']
+    origin['비고'] = results['비고']
+    # origin = origin.drop(['Unnamed: 0'], axis=1)
+    
+    origin.to_excel(file_name,index=False)
+    return {'msg': 'file_saved'}
     
 # 엑셀 양식 다운로드 url
 @app.route('/form_download')
@@ -224,21 +232,24 @@ def form_download():
                     attachment_filename='excel_form.xlsx',# 다운받아지는 파일 이름. 
                      as_attachment=True)
 
+'''
+no Tensor
 
 # 가비지 찾아서 새 파일로 다운받기
 @app.route('/predict', methods=['POST'])
 def predict():
 
     mecab = CONFIG.mecab()
-    tokenizer=pickle.load(open('./deeplearning/premorph_PickleFile.pkl', 'rb'))
+    tokenizer=pickle.load(open('./deeplearning/10_category_tokenizer_PickleFile.pkl', 'rb'))
     max_len = 300
 
     origin = pd.read_excel(request.files['file'])
     predict=pd.DataFrame()
     predict['reviews']=origin['제목']+origin['원문']
 
-    loaded_model=load_model("./deeplearning/premorph_ck_model.h5")
+    loaded_model=load_model("./deeplearning/10_conv1d_all.h5")
     score=[]
+    label=[]
 
     for items in predict['reviews'] :
         
@@ -246,10 +257,12 @@ def predict():
         new_sentence = [word for word in new_sentence if word=='원' or len(word) > 1] # 한글자 제거
         encoded = tokenizer.texts_to_sequences([new_sentence]) # 정수 인코딩
         pad_new = pad_sequences(encoded, maxlen = max_len) # 패딩
-        score.append(float(loaded_model.predict(pad_new))) # 예측
+        score.append(loaded_model.predict(pad_new)) # 예측
+    
+    for i in range(len(score)) :
+        label.append(np.argmax(score[i]))
 
- 
-    origin['진성여부']=['Y' if i > 0.5 else 'N' for i in score]
+    origin['진성여부']=['Y' if i==0 or i==1 or i==2 or i==3 else 'N' for i in label]
 
     output = BytesIO()
     writer = pd.ExcelWriter(output, engine='xlsxwriter')
@@ -266,8 +279,7 @@ def predict():
 
 
 
-
-
+'''
 
 
 
